@@ -9,10 +9,20 @@ export function listVehicles(query) {
   })
 }
 
-// 查询岗位详细
-export function getPost(postId) {
+
+
+export function initVehicle(query) {
   return request({
-    url: '/system/post/' + postId,
-    method: 'get'
+    url: '/vehicle/init',
+    method: 'post',
+    params: query
+  })
+}
+
+export function pausedVehicle(query) {
+  return request({
+    url: '/vehicle/paused',
+    method: 'post',
+    params: query
   })
 }
