@@ -47,9 +47,8 @@
     <el-table
       v-loading="loading"
       :data="postList"
-      @selection-change="handleSelectionChange"
     >
-      <el-table-column type="selection" width="55" align="center" />
+      <el-table-column width="55" align="center" />
       <el-table-column label="名称" align="center" prop="name" />
       <el-table-column label="电量" align="center" prop="energyLevel" />
       <el-table-column label="当前位置" align="center" prop="currentPosition" />
@@ -70,6 +69,7 @@
           />
         </template>
       </el-table-column>
+      <el-table-column label="集成级别" align="center" prop="integrationLevel"></el-table-column>
       <el-table-column label="暂停状态" align="center" prop="paused">
         <template slot-scope="scope">
           <span>{{ scope.row.paused ? "true" : "false" }}</span>
@@ -234,19 +234,7 @@ export default {
       this.resetForm("queryForm");
       this.handleQuery();
     },
-    // 多选框选中数据
-    handleSelectionChange(selection) {
-      this.ids = selection.map((item) => item.postId);
-      this.single = selection.length != 1;
-      this.multiple = !selection.length;
-    },
-    /** 新增按钮操作 */
-    handleAdd() {
-      this.reset();
-      this.open = true;
-      this.title = "添加车辆";
-    },
-    /** 修改按钮操作 */
+    /** 初始化按钮操作 */
     handleUpdate(row) {
       this.reset();
       this.form.name = row.name;
@@ -269,7 +257,7 @@ export default {
         }
       });
     },
-    /** 删除按钮操作 */
+    /** 暂停/恢复按钮操作 */
     stoporrecover(row) {
       const name = row.name;
       const paused = row.paused;
@@ -294,16 +282,6 @@ export default {
           })
           .catch(() => {});
       }
-    },
-    /** 导出按钮操作 */
-    handleExport() {
-      this.download(
-        "system/post/export",
-        {
-          ...this.queryParams,
-        },
-        `post_${new Date().getTime()}.xlsx`
-      );
     },
   },
 };

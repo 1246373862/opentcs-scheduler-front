@@ -15,7 +15,7 @@ export function initVehicle(query) {
   return request({
     url: '/vehicle/init',
     method: 'post',
-    params: query
+    data: query
   })
 }
 
@@ -23,6 +23,6 @@ export function pausedVehicle(query) {
   return request({
     url: '/vehicle/paused',
     method: 'post',
-    params: query
+    data: query
   })
 }
