@@ -147,7 +147,7 @@ import {
 import { listVehicles, initVehicle,pausedVehicle} from "@/api/scheduler/vehicles";
 import { getPoints } from "@/api/scheduler/map";
 export default {
-  name: "Post",
+  name: "vehicles",
   dicts: ["sys_vehicles_procstatus", "sys_vehicles_status"],
   data() {
     return {

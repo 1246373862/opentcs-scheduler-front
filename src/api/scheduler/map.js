@@ -8,3 +8,17 @@ export function getPoints() {
   })
 }
 
+// 获取地图信息
+export function getMap() {
+  return request({
+    url: '/map/map',
+    method: 'get'
+  })
+}
+
+export function getLocations() {
+  return request({
+    url: '/map/locations',
+    method: 'get'
+  })
+}
