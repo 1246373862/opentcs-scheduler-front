@@ -1,6 +1,13 @@
 <template>
   <div>
-    <canvas ref="graphCanvas" width="1400" height="900"></canvas>
+    <el-card class="box-card">
+      <el-button icon="el-icon-refresh" size="mini" @click="startPolling"
+          >加载地图</el-button
+        >
+      <div>
+        <canvas ref="graphCanvas" width="1400" height="900"></canvas>
+      </div>
+    </el-card>
   </div>
 </template>
   
@@ -17,12 +24,9 @@ export default {
     };
   },
   created() {
-    setInterval(() => {
-      this.getLocations();
-      this.getMap();
-      this.getVehicles();
-      this.renderGraph();
-    }, 500);
+  },
+  beforeDestroy() {
+    this.stopPolling();
   },
   methods: {
     getVehicles() {
@@ -134,7 +138,7 @@ export default {
           );
           const end = this.points.find((point) => point.name === resource.end);
           if (start && end) {
-            ctx.strokeStyle = 'green'; // 设置线条颜色为半透明绿色
+            ctx.strokeStyle = "green"; // 设置线条颜色为半透明绿色
             ctx.lineWidth = 7; // 设置线条粗度为3
             ctx.setLineDash([9, 9]); // 设置虚线样式
             ctx.beginPath();
@@ -151,7 +155,7 @@ export default {
           );
           const end = this.points.find((point) => point.name === resource.end);
           if (start && end) {
-            ctx.strokeStyle = 'rgba(0, 128, 0, 0.5)'; // 设置线条颜色为半透明绿色
+            ctx.strokeStyle = "rgba(0, 128, 0, 0.5)"; // 设置线条颜色为半透明绿色
             ctx.lineWidth = 7; // 设置线条粗度为3
             ctx.setLineDash([9, 9]); // 设置虚线样式
             ctx.beginPath();
@@ -163,7 +167,17 @@ export default {
         });
       });
     },
-
+    startPolling() {
+      this.pollingTimer = setInterval(() => {
+        this.getLocations();
+        this.getMap();
+        this.getVehicles();
+        this.renderGraph();
+      }, 1000);
+    },
+    stopPolling() {
+      clearInterval(this.pollingTimer);
+    },
   },
 };
 
