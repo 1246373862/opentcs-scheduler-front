@@ -12,6 +12,7 @@
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
         <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd">创建订单</el-button>
+        <el-button type="primary" plain icon="el-icon-refresh" size="mini" @click="getList">刷新</el-button>
       </el-col>
     </el-row>
     <el-table v-loading="loading" :data="ordersList">
@@ -34,11 +35,13 @@
           <span>{{ scope.row.paused ? "true" : "false" }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="创建日期" align="center" prop="creationTime" />
+      <el-table-column label="创建时间" align="center" prop="creationTime" />
+      <el-table-column label="截止时间" align="center" prop="deadline" />
+      <el-table-column label="完成时间" align="center" prop="finishedTime" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button size="mini" type="text" @click="detail(scope.row)">详情</el-button>
-          <el-button size="mini" type="text" @click="stoporrecover(scope.row)">更改预执行车辆</el-button>
+          <el-button size="mini" type="text" @click="update(scope.row)">更改预执行车辆</el-button>
           <el-button size="mini" type="text" @click="withdraw(scope.row)">撤回</el-button>
         </template>
       </el-table-column>
@@ -98,14 +101,27 @@
         <el-button @click="cancel">取 消</el-button>
       </div>
     </el-dialog>
+    <!-- 更改预执行车辆对话框 -->
+    <el-dialog :title="titleUpdate" :visible.sync="openUpdate" width="500px" append-to-body>
+      <el-form ref="form" :model="formUpdate" label-width="80px">
+        <el-form-item label="车辆" prop="point">
+          <el-select v-model="formUpdate.vehicleName" placeholder="请选择车辆" clearable :style="{ width: '100%' }">
+            <el-option v-for="item in vehicleList" :key="item.name" :label="item.name" :value="item.name">
+            </el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submitFormUpdate">确 定</el-button>
+        <el-button @click="cancel">取 消</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import {
-  listVehicles,
-  initVehicle,
-  pausedVehicle,
+  listVehicles
 } from "@/api/scheduler/vehicles";
 import {
   getLocations
@@ -115,14 +131,15 @@ import {
   withdraw,
   selectOneByName,
   createOrder,
+  updateOrders
 } from "@/api/scheduler/orders";
 export default {
   name: "vehicles",
   dicts: ["sys_vehicles_procstatus", "sys_vehicles_status"],
   data() {
     return {
-      openAdd: false,
       titleAdd: "",
+      titleUpdate: "",
       // 遮罩层
       loading: true,
       // 选中数组
@@ -141,6 +158,8 @@ export default {
       title: "",
       // 是否显示弹出层
       open: false,
+      openAdd: false,
+      openUpdate: false,
       operations: ["Load cargo", "NOP", "Unload cargo"],
       // 查询参数
       queryParams: {
@@ -166,6 +185,7 @@ export default {
         ]
       },
       form: {},
+      formUpdate: {},
       destinations: [],
       locations: [],
       // 表单校验
@@ -175,6 +195,9 @@ export default {
         ],
       },
       rulesAdd: {
+        dispensable: [
+          { required: true, message: "参数不能为空", trigger: "blur" },
+        ],
         destinations: [
           { required: true, message: "运输任务不能为空", trigger: "blur" },
         ],
@@ -193,11 +216,13 @@ export default {
         this.total = response.total;
         this.loading = false;
       });
+      this.loading = true;
     },
     // 取消按钮
     cancel() {
       this.open = false;
       this.openAdd = false;
+      this.openUpdate = false;
       this.reset();
     },
     submitForm: function () {
@@ -212,10 +237,26 @@ export default {
         }
       });
     },
+    submitFormUpdate: function () {
+      this.$refs["form"].validate(valid => {
+        if (valid) {
+          updateOrders(this.formUpdate).then(response => {
+            this.$modal.msgSuccess("创建订单成功");
+            this.open = false;
+            this.getList();
+            this.cancel()
+          });
+        }
+      });
+    }
+    ,
     // 表单重置
     reset() {
       this.form = {};
-      (this.formAdd = {}), this.resetForm("form");
+      (this.formAdd = {}),
+        this.formUpdate = {},
+        this.resetForm("formUpdate");
+      this.resetForm("form");
       this.resetForm("formAdd");
     },
     /** 搜索按钮操作 */
@@ -247,11 +288,21 @@ export default {
       });
       console.log(this.form);
     },
-    handleAdd() {
+    update(row) {
       this.reset();
+      this.formUpdate.name = row.name;
+      this.getVehicles();
+      this.openUpdate = true;
+      this.titleUpdate = "更改预执行车辆";
+    },
+    getVehicles() {
       listVehicles(this.queryParams).then((response) => {
         this.vehicleList = response.rows;
       });
+    },
+    handleAdd() {
+      this.reset();
+      this.getVehicles();
       getLocations().then((response) => {
         this.locations = response.data;
       });

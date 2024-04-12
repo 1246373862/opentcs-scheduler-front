@@ -111,7 +111,7 @@
     <!-- 初始化车辆对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="下拉选择" prop="point">
+        <el-form-item label="点位" prop="point">
           <el-select
             v-model="form.point"
             placeholder="请选择初始点位"

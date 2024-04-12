@@ -12,8 +12,7 @@
         // option配置
         option: {
           title: {
-            text: 'Referer of a Website',
-            subtext: 'Fake Data',
+            text: '运输类型',
             left: 'center'
           },
           tooltip: {
@@ -29,11 +28,11 @@
               type: 'pie',
               radius: '50%',
               data: [
-                { value: 1048, name: 'Engine' },
-                { value: 735, name: 'Direct' },
-                { value: 580, name: 'Email' },
-                { value: 484, name: 'Union' },
-                { value: 300, name: 'Video' }
+                { value: 108, name: '装货' },
+                { value: 735, name: '暂留' },
+                { value: 580, name: '卸货' },
+                { value: 484, name: '充电' },
+                { value: 300, name: '停留' }
               ],
               emphasis: {
                 itemStyle: {

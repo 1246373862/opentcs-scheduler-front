@@ -31,3 +31,10 @@ export function createOrder(post) {
     data: post
   })
 }
+export function updateOrders(post) {
+  return request({
+    url: '/order/update',
+    method: 'put',
+    data: post
+  })
+}

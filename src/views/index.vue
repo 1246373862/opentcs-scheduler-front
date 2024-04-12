@@ -3,7 +3,7 @@
     <!--块类统计-->
     <el-row :gutter="20">
       <el-col :span="6">
-        <el-card class="box-card">
+        <el-card class="box-card" shadow="hover">
           <h3>订单总量</h3>
           <div>
             <i class="el-icon-s-shop" style="color: purple"></i>
@@ -12,7 +12,7 @@
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card class="box-card">
+        <el-card class="box-card" shadow="hover">
           <h3>小车总量</h3>
           <div>
             <i class="el-icon-user-solid" style="color: green"></i>
@@ -21,7 +21,7 @@
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card class="box-card">
+        <el-card class="box-card" shadow="hover">
           <h3>在运行小车数量</h3>
           <div>
             <i class="el-icon-s-flag" style="color: red"></i>
@@ -30,7 +30,7 @@
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card class="box-card">
+        <el-card class="box-card" shadow="hover">
           <h3>当前在线用户数</h3>
           <div>
             <i class="el-icon-star-on" style="color: blue"></i>
@@ -42,15 +42,15 @@
     <!--acharts统计图-->
     <el-row :gutter="20">
       <el-col :span="16">
-        <el-card class="box-card">
+        <el-card class="box-card" shadow="hover">
           <echarts1 />
         </el-card>
       </el-col>
       <el-col :span="8">
-        <el-card class="box-card">
+        <el-card class="box-card" shadow="hover">
           <echarts2 />
         </el-card>
-        <el-card class="box-card">
+        <el-card class="box-card" shadow="hover">
           <echarts3 />
         </el-card>
       </el-col>
