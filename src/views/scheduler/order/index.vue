@@ -1,45 +1,17 @@
 <template>
   <div class="app-container">
-    <el-form
-      :model="queryParams"
-      ref="queryForm"
-      size="small"
-      :inline="true"
-      v-show="showSearch"
-      label-width="68px"
-    >
+    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="订单编号" prop="postName">
-        <el-input
-          v-model="queryParams.name"
-          placeholder="请输入订单编号"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
+        <el-input v-model="queryParams.name" placeholder="请输入订单编号" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
       <el-form-item>
-        <el-button
-          type="primary"
-          icon="el-icon-search"
-          size="mini"
-          @click="handleQuery"
-          >搜索</el-button
-        >
-        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery"
-          >重置</el-button
-        >
+        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
       </el-form-item>
     </el-form>
 
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
-        <el-button
-          type="primary"
-          plain
-          icon="el-icon-plus"
-          size="mini"
-          @click="handleAdd"
-          v-hasPermi="['system:post:add']"
-        >新增</el-button>
+        <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd">创建订单</el-button>
       </el-col>
     </el-row>
     <el-table v-loading="loading" :data="ordersList">
@@ -47,69 +19,79 @@
       <el-table-column label="订单编号" align="center" prop="name" />
       <el-table-column label="订单类型" align="center" prop="type" />
       <el-table-column label="订单状态" align="center" prop="state" />
-      <el-table-column label="预定执行车辆" align="center" prop="intendedVehicle"/>
-      <el-table-column label="实际执行车辆" align="center" prop="processingVehicle"/>
-      <el-table-column label="能否撤回" align="center" prop="dispensable">
+      <el-table-column label="预定执行车辆" align="center" prop="intendedVehicle">
+        <template slot-scope="scope">
+          <span>{{
+      scope.row.intendedVehicle === null
+        ? "自动分配"
+        : scope.row.intendedVehicle
+    }}</span>
+        </template></el-table-column>
+
+      <el-table-column label="实际执行车辆" align="center" prop="processingVehicle" />
+      <el-table-column label="无法撤回" align="center" prop="dispensable">
         <template slot-scope="scope">
           <span>{{ scope.row.paused ? "true" : "false" }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="创建日期" align="center" prop="data"/>
-      <el-table-column
-        label="操作"
-        align="center"
-        class-name="small-padding fixed-width"
-      >
+      <el-table-column label="创建日期" align="center" prop="creationTime" />
+      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
-          <el-button
-            size="mini"
-            type="text"
-            @click="handleUpdate(scope.row)"
-            >详情</el-button
-          >
-          <el-button
-            size="mini"
-            type="text"
-            @click="stoporrecover(scope.row)"
-            >更改预执行车辆</el-button
-          >
-          <el-button
-            size="mini"
-            type="text"
-            @click="withdraw(scope.row)"
-            >撤回</el-button
-          >
+          <el-button size="mini" type="text" @click="detail(scope.row)">详情</el-button>
+          <el-button size="mini" type="text" @click="stoporrecover(scope.row)">更改预执行车辆</el-button>
+          <el-button size="mini" type="text" @click="withdraw(scope.row)">撤回</el-button>
         </template>
       </el-table-column>
     </el-table>
 
-    <pagination
-      v-show="total > 0"
-      :total="total"
-      :page.sync="queryParams.pageNum"
-      :limit.sync="queryParams.pageSize"
-      @pagination="getList"
-    />
+    <pagination v-show="total > 0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize"
+      @pagination="getList" />
 
-    <!-- 添加或修改车辆对话框 -->
+    <!-- 订单详情对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="下拉选择" prop="point">
-          <el-select
-            v-model="form.point"
-            placeholder="请选择初始点位"
-            clearable
-            :style="{ width: '100%' }"
-          >
-            <el-option
-              v-for="item in points"
-              :key="item.name"
-              :label="item.name"
-              :value="item.name"
-            >
+        <el-table v-loading="loading" :data="destinations">
+          <el-table-column width="55" align="center" />
+          <el-table-column label="目的地" align="center" prop="locationName" />
+          <el-table-column label="操作" align="center" prop="operation" />
+          <el-table-column label="当前状态" align="center" prop="state" />
+        </el-table>
+      </el-form>
+    </el-dialog>
+    <!-- 创建订单对话框 -->
+    <el-dialog :title="titleAdd" :visible.sync="openAdd" width="500px" append-to-body>
+      <el-form ref="form" :model="formAdd" label-width="80px" :rules="rulesAdd">
+        <el-form-item label="执行车辆" prop="vehicleName">
+          <el-select v-model="formAdd.vehicleName" placeholder="请下拉选择车辆名称(为空则自动分配)" clearable
+            :style="{ width: '100%' }">
+            <el-option v-for="item in vehicleList" :key="item.name" :label="item.name" :value="item.name">
             </el-option>
           </el-select>
         </el-form-item>
+        <el-form-item label="无法撤回" prop="dispensable">
+          <el-select v-model="formAdd.dispensable" placeholder="false可撤回/ture不可撤回" clearable :style="{ width: '100%' }">
+            <el-option :label="true" :value="true"></el-option>
+            <el-option :label="false" :value="false"></el-option>
+          </el-select>
+        </el-form-item>
+
+        <!-- 动态表单部分 -->
+        <el-button @click="addRow" type="primary" size="mini">添加任务</el-button>
+        <div>
+          <el-form-item label="运输作业" v-for="(row, index) in formAdd.destinations" :key="index">
+            <div>
+              <el-select v-model="row.destLocationName" placeholder="请下拉选择目的地" clearable :style="{ width: '70%' }">
+                <el-option v-for="item in locations" :key="item.name" :label="item.name" :value="item.name">
+                </el-option>
+              </el-select>
+            </div>
+            <div> <el-select v-model="row.destOperation" placeholder="请下拉选择操作" clearable :style="{ width: '70%' }">
+                <el-option v-for="item in operations" :key="item" :label="item" :value="item">
+                </el-option>
+              </el-select></div>
+            <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteRow(index)">删除</el-button>
+          </el-form-item>
+        </div>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
@@ -118,19 +100,29 @@
     </el-dialog>
   </div>
 </template>
-    
-    <script>
+
+<script>
 import {
   listVehicles,
   initVehicle,
   pausedVehicle,
 } from "@/api/scheduler/vehicles";
-import {getOrders,withdraw} from "@/api/scheduler/orders";
+import {
+  getLocations
+} from "@/api/scheduler/map";
+import {
+  getOrders,
+  withdraw,
+  selectOneByName,
+  createOrder,
+} from "@/api/scheduler/orders";
 export default {
   name: "vehicles",
   dicts: ["sys_vehicles_procstatus", "sys_vehicles_status"],
   data() {
     return {
+      openAdd: false,
+      titleAdd: "",
       // 遮罩层
       loading: true,
       // 选中数组
@@ -149,6 +141,7 @@ export default {
       title: "",
       // 是否显示弹出层
       open: false,
+      operations: ["Load cargo", "NOP", "Unload cargo"],
       // 查询参数
       queryParams: {
         pageNum: 1,
@@ -164,18 +157,28 @@ export default {
         name: undefined,
         pause: undefined,
       },
+      vehicleList: [],
       points: [],
       // 表单参数
-      form: {
-        point: undefined,
-        name: undefined,
+      formAdd: {
+        destinations: [
+          { destLocationName: '123', destOperation: '123' } // 初始一行数据
+        ]
       },
+      form: {},
+      destinations: [],
+      locations: [],
       // 表单校验
       rules: {
         points: [
           { required: true, message: "初始点位不能为空", trigger: "blur" },
         ],
       },
+      rulesAdd: {
+        destinations: [
+          { required: true, message: "运输任务不能为空", trigger: "blur" },
+        ],
+      }
     };
   },
   created() {
@@ -185,7 +188,7 @@ export default {
     /** 查询订单列表 */
     getList() {
       this.loading = true;
-      getOrders().then((response) => {
+      getOrders(this.queryParams).then((response) => {
         this.ordersList = response.rows;
         this.total = response.total;
         this.loading = false;
@@ -194,54 +197,37 @@ export default {
     // 取消按钮
     cancel() {
       this.open = false;
+      this.openAdd = false;
       this.reset();
+    },
+    submitForm: function () {
+      this.$refs["form"].validate(valid => {
+        if (valid) {
+          createOrder(this.formAdd).then(response => {
+            this.$modal.msgSuccess("创建订单成功");
+            this.open = false;
+            this.getList();
+            this.cancel()
+          });
+        }
+      });
     },
     // 表单重置
     reset() {
-      this.form = {
-        point: undefined,
-        name: undefined,
-      };
-      this.resetForm("form");
+      this.form = {};
+      (this.formAdd = {}), this.resetForm("form");
+      this.resetForm("formAdd");
     },
     /** 搜索按钮操作 */
     handleQuery() {
       this.queryParams.pageNum = 1;
       this.getList();
     },
-    /** 重置按钮操作 */
-    resetQuery() {
-      this.resetForm("queryForm");
-      this.handleQuery();
-    },
-    /** 初始化按钮操作 */
-    handleUpdate(row) {
-      this.reset();
-      this.form.name = row.name;
-      getPoints().then((response) => {
-        this.points = response.data;
-        this.open = true;
-        this.title = "初始化车辆";
-      });
-      console.log(this.form);
-    },
-    /** 提交按钮 */
-    submitForm: function () {
-      this.$refs["form"].validate((valid) => {
-        if (valid) {
-          initVehicle(this.form).then((response) => {
-            this.$modal.msgSuccess("修改成功");
-            this.open = false;
-            this.getList();
-          });
-        }
-      });
-    },
-    /** 暂停/恢复按钮操作 */
+    /**撤回按钮操作 */
     withdraw(row) {
-      if(row.dispensable){
+      if (row.dispensable) {
         this.$modal.msgError("该订单无法被撤回");
-      }else{
+      } else {
         this.$modal
           .confirm('是否撤回订单"' + row.name + '"？')
           .then(() => withdraw(row.name))
@@ -249,10 +235,44 @@ export default {
             this.getList();
             this.$modal.msgSuccess("撤回成功");
           })
-          .catch(() => {});
+          .catch(() => { });
       }
+    },
+    detail(row) {
+      this.reset();
+      selectOneByName(row).then((response) => {
+        this.destinations = JSON.parse(response.data.destinations);
+        this.open = true;
+        this.title = "订单详情";
+      });
+      console.log(this.form);
+    },
+    handleAdd() {
+      this.reset();
+      listVehicles(this.queryParams).then((response) => {
+        this.vehicleList = response.rows;
+      });
+      getLocations().then((response) => {
+        this.locations = response.data;
+      });
+      this.openAdd = true;
+      this.titleAdd = "创建订单";
+    },
+    addRow() {
+      if (!this.formAdd.destinations) {
+        this.$set(this.formAdd, "destinations", [
+          { destLocationName: "", destOperation: "" },
+        ]);
+      } else {
+        this.formAdd.destinations.push({
+          destLocationName: "",
+          destOperation: "",
+        });
+      }
+    },
+    deleteRow(index) {
+      this.formAdd.destinations.splice(index, 1);
     },
   },
 };
 </script>
-    

@@ -1,10 +1,11 @@
 import request from '@/utils/request'
 
 // 获取point
-export function getOrders() {
+export function getOrders(query) {
   return request({
     url: '/order/page',
-    method: 'get'
+    method: 'get',
+    params: query
   })
 }
 
@@ -13,5 +14,20 @@ export function withdraw(query) {
     url: '/order/withdraw',
     method: 'put',
     data: query
+  })
+}
+export function selectOneByName(query) {
+  return request({
+    url: '/order/select',
+    method: 'get',
+    params: query
+  })
+}
+
+export function createOrder(post) {
+  return request({
+    url: '/order/create',
+    method: 'post',
+    data: post
   })
 }
